@@ -43,6 +43,7 @@ class ViewDialog;
 class ShortcutsDialog;
 class AstroCalcDialog;
 class BookmarksDialog;
+class BookmarksLocationsDialog;
 #ifdef ENABLE_SCRIPT_CONSOLE
 class ScriptConsole;
 #endif
@@ -65,6 +66,7 @@ class StelGui : public QObject, public StelGuiBase
 	Q_PROPERTY(bool flagShowNightmodeButton READ getFlagShowNightmodeButton WRITE setFlagShowNightmodeButton NOTIFY  flagShowNightmodeButtonChanged)
 	Q_PROPERTY(bool flagShowFullscreenButton READ getFlagShowFullscreenButton WRITE setFlagShowFullscreenButton NOTIFY  flagShowFullscreenButtonChanged)
 	Q_PROPERTY(bool flagShowBookmarksButton READ getFlagShowBookmarksButton WRITE setFlagShowBookmarksButton NOTIFY flagShowBookmarksButtonChanged)
+    Q_PROPERTY(bool flagShowBookmarksLocButton READ getFlagShowBookmarksLocButton WRITE setFlagShowBookmarksLocButton NOTIFY flagShowBookmarksLocButtonChanged)
 	Q_PROPERTY(bool flagShowICRSGridButton READ getFlagShowICRSGridButton WRITE setFlagShowICRSGridButton NOTIFY flagShowICRSGridButtonChanged)
 	Q_PROPERTY(bool flagShowGalacticGridButton READ getFlagShowGalacticGridButton WRITE setFlagShowGalacticGridButton NOTIFY flagShowGalacticGridButtonChanged )
 	Q_PROPERTY(bool flagShowEclipticGridButton READ getFlagShowEclipticGridButton WRITE setFlagShowEclipticGridButton NOTIFY flagShowEclipticGridButtonChanged )
@@ -179,6 +181,11 @@ public slots:
 	void setFlagShowBookmarksButton(bool b);
 	//! Get whether the button toggling bookmarks is visible
 	bool getFlagShowBookmarksButton() const;
+    
+    	//! Define whether the button toggling bookmarks locations should be visible
+	void setFlagShowBookmarksLocButton(bool b);
+	//! Get whether the button toggling bookmarks locations is visible
+	bool getFlagShowBookmarksLocButton() const;
 
 	//! Define whether the button toggling ICRS grid should be visible
 	void setFlagShowICRSGridButton(bool b);
@@ -257,6 +264,7 @@ signals:
 	void flagShowNightmodeButtonChanged(bool b);
 	void flagShowFullscreenButtonChanged(bool b);
 	void flagShowBookmarksButtonChanged(bool b);
+    	void flagShowBookmarksLocButtonChanged(bool b);
 	void flagShowICRSGridButtonChanged(bool b);
 	void flagShowGalacticGridButtonChanged(bool b);
 	void flagShowEclipticGridButtonChanged(bool b);
@@ -310,6 +318,7 @@ private:
 #endif
 	AstroCalcDialog* astroCalcDialog;
 	BookmarksDialog* bookmarksDialog;
+    	BookmarksLocationsDialog* bookmarksLocationsDialog;
 
 	bool flagShowFlipButtons;
 	StelButton* flipVert;
@@ -332,6 +341,9 @@ private:
 
 	bool flagShowBookmarksButton;
 	StelButton* btShowBookmarks;
+    
+    	bool flagShowBookmarksLocButton;
+	StelButton* btShowBookmarksLoc;
 
 	bool flagShowICRSGridButton;
 	StelButton* btShowICRSGrid;

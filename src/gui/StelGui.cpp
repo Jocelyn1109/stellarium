@@ -59,6 +59,7 @@
 #include "ShortcutsDialog.hpp"
 #include "AstroCalcDialog.hpp"
 #include "BookmarksDialog.hpp"
+#include "BookmarksLocationsDialog.hpp"
 
 #include <QDebug>
 #include <QTimeLine>
@@ -115,6 +116,8 @@ StelGui::StelGui()
 	, buttonFullscreen(Q_NULLPTR)
 	, flagShowBookmarksButton(false)
 	, btShowBookmarks(Q_NULLPTR)
+    	, flagShowBookmarksLocButton(false)
+	, btShowBookmarksLoc(Q_NULLPTR)
 	, flagShowICRSGridButton(false)
 	, btShowICRSGrid(Q_NULLPTR)
 	, flagShowGalacticGridButton(false)
@@ -191,6 +194,11 @@ StelGui::~StelGui()
 		delete bookmarksDialog;
 		bookmarksDialog = Q_NULLPTR;
 	}
+	if (bookmarksLocationsDialog)
+	{
+		delete bookmarksLocationsDialog;
+		bookmarksLocationsDialog = Q_NULLPTR;
+	}
 }
 
 void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
@@ -211,6 +219,7 @@ void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
 #endif
 	astroCalcDialog = new AstroCalcDialog(atopLevelGraphicsWidget);
 	bookmarksDialog = new BookmarksDialog(atopLevelGraphicsWidget);
+    	bookmarksLocationsDialog = new BookmarksLocationsDialog(atopLevelGraphicsWidget);
 
 	///////////////////////////////////////////////////////////////////////
 	// Create all the main actions of the program, associated with shortcuts
@@ -244,6 +253,7 @@ void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
 	actionsMgr->addAction("actionShow_Shortcuts_Window_Global", windowsGroup, N_("Shortcuts window"), shortcutsDialog, "visible", "F7", "", true);
 	actionsMgr->addAction("actionShow_AstroCalc_Window_Global", windowsGroup, N_("Astronomical calculations window"), astroCalcDialog, "visible", "F10", "", true);
 	actionsMgr->addAction("actionShow_Bookmarks_Window_Global", windowsGroup, N_("Bookmarks"), bookmarksDialog, "visible", "Alt+B", "", true);
+    	actionsMgr->addAction("actionShow_Bookmarks_Locations_Window_Global", windowsGroup, N_("BookmarksLocations"), bookmarksLocationsDialog, "visible", "Alt+F", "", true);
 	actionsMgr->addAction("actionSave_Copy_Object_Information_Global", miscGroup, N_("Copy selected object information to clipboard"), this, "copySelectedObjectInfo()", "Ctrl+Shift+C", "", true);
 
 	QSettings* conf = StelApp::getInstance().getSettings();
@@ -415,6 +425,7 @@ void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
 	setFlagShowNightmodeButton(conf->value("gui/flag_show_nightmode_button", true).toBool());
 	setFlagShowFullscreenButton(conf->value("gui/flag_show_fullscreen_button", true).toBool());
 	setFlagShowBookmarksButton(conf->value("gui/flag_show_bookmarks_button", false).toBool());
+    	setFlagShowBookmarksLocButton(conf->value("gui/flag_show_bookmarks_loc_button", false).toBool());
 	setFlagShowICRSGridButton(conf->value("gui/flag_show_icrs_grid_button", false).toBool());
 	setFlagShowGalacticGridButton(conf->value("gui/flag_show_galactic_grid_button", false).toBool());
 	setFlagShowEclipticGridButton(conf->value("gui/flag_show_ecliptic_grid_button", false).toBool());
@@ -801,6 +812,36 @@ void StelGui::setFlagShowBookmarksButton(bool b)
 			skyGui->updateBarsPos();
 		}
 		emit flagShowBookmarksButtonChanged(b);
+	}
+}
+
+// Define whether the button toggling bookmarks location should be visible
+//TODO: créer actionShow_Bookmarks_Positions_Window_Global
+void StelGui::setFlagShowBookmarksLocButton(bool b)
+{
+	if(b!=flagShowBookmarksLocButton)
+	{
+		if (b==true) {
+			if (btShowBookmarksLoc==Q_NULLPTR) {
+				// Create the nebulae background button
+				QPixmap pxmapGlow32x32(":/graphicGui/glow32x32.png");
+				QPixmap pxmapOn(":/graphicGui/btBookmarksC-on.png");
+				QPixmap pxmapOff(":/graphicGui/btBookmarksC-off.png");
+				btShowBookmarksLoc = new StelButton(Q_NULLPTR, pxmapOn, pxmapOff, pxmapGlow32x32, "actionShow_Bookmarks_Locations_Window_Global");
+			}
+			getButtonBar()->addButton(btShowBookmarksLoc, "060-othersGroup");
+		} else {
+			getButtonBar()->hideButton("actionShow_Bookmarks_Locations_Window_Global");
+		}
+		flagShowBookmarksLocButton = b;
+		QSettings* conf = StelApp::getInstance().getSettings();
+		Q_ASSERT(conf);
+		conf->setValue("gui/flag_show_bookmarks_loc_button", b);
+		conf->sync();
+		if (initDone) {
+			skyGui->updateBarsPos();
+		}
+		emit flagShowBookmarksLocButtonChanged(b);
 	}
 }
 
@@ -1278,6 +1319,11 @@ bool StelGui::getFlagShowFullscreenButton() const
 bool StelGui::getFlagShowBookmarksButton() const
 {
 	return flagShowBookmarksButton;
+}
+
+bool StelGui::getFlagShowBookmarksLocButton() const
+{
+	return flagShowBookmarksLocButton;
 }
 
 bool StelGui::getFlagShowICRSGridButton() const

@@ -288,7 +288,7 @@
       <item row="1" column="0">
        <widget class="QStackedWidget" name="configurationStackedWidget">
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="page_Main">
          <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -1014,80 +1014,6 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item row="5" column="1">
-              <widget class="QCheckBox" name="showBookmarksButtonCheckBox">
-               <property name="toolTip">
-                <string>Enable a feature to store favorite views.</string>
-               </property>
-               <property name="text">
-                <string>Show bookmarks button</string>
-               </property>
-              </widget>
-             </item>
-             <item row="7" column="0">
-              <widget class="QCheckBox" name="showGotoSelectedButtonCheckBox">
-               <property name="toolTip">
-                <string>Show button in addition to keyboard shortcut?</string>
-               </property>
-               <property name="text">
-                <string>Show centering button</string>
-               </property>
-              </widget>
-             </item>
-             <item row="4" column="1">
-              <widget class="QCheckBox" name="showHipsButtonCheckBox">
-               <property name="toolTip">
-                <string>Toggle display of the button for the HiPS Surveys. Select a survey in the View settings.</string>
-               </property>
-               <property name="text">
-                <string>Show HiPS button</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
-              <widget class="QCheckBox" name="showDSSButtonCheckbox">
-               <property name="toolTip">
-                <string>Toggle display of the button for the Digitized Sky Survey.</string>
-               </property>
-               <property name="text">
-                <string>Show DSS button</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QCheckBox" name="showFlipButtonsCheckbox">
-               <property name="toolTip">
-                <string>Toggle vertical and horizontal image flip buttons.</string>
-               </property>
-               <property name="text">
-                <string>Show flip buttons</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QCheckBox" name="showAsterismLinesButtonCheckBox">
-               <property name="text">
-                <string>Show asterism lines button</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QCheckBox" name="showNebulaBgButtonCheckbox">
-               <property name="toolTip">
-                <string>Toggle display of nebula images.</string>
-               </property>
-               <property name="text">
-                <string>Show nebula background button</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QCheckBox" name="showAsterismLabelsButtonCheckBox">
-               <property name="text">
-                <string>Show asterism labels button</string>
-               </property>
-              </widget>
-             </item>
              <item row="4" column="0">
               <widget class="QCheckBox" name="showEclipticGridButtonCheckBox">
                <property name="toolTip">
@@ -1098,10 +1024,17 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QCheckBox" name="showConstellationBoundariesButtonCheckBox">
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="showAsterismLinesButtonCheckBox">
                <property name="text">
-                <string>Show constellation boundaries button</string>
+                <string>Show asterism lines button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QCheckBox" name="showAsterismLabelsButtonCheckBox">
+               <property name="text">
+                <string>Show asterism labels button</string>
                </property>
               </widget>
              </item>
@@ -1115,13 +1048,10 @@
                </property>
               </widget>
              </item>
-             <item row="8" column="0">
-              <widget class="QCheckBox" name="showNightmodeButtonCheckBox">
-               <property name="toolTip">
-                <string>Show button in addition to keyboard shortcut?</string>
-               </property>
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="showConstellationBoundariesButtonCheckBox">
                <property name="text">
-                <string>Show nightmode button</string>
+                <string>Show constellation boundaries button</string>
                </property>
               </widget>
              </item>
@@ -1132,6 +1062,86 @@
                </property>
                <property name="text">
                 <string>Show galactic grid button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="7" column="0">
+              <widget class="QCheckBox" name="showGotoSelectedButtonCheckBox">
+               <property name="toolTip">
+                <string>Show button in addition to keyboard shortcut?</string>
+               </property>
+               <property name="text">
+                <string>Show centering button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="QCheckBox" name="showNightmodeButtonCheckBox">
+               <property name="toolTip">
+                <string>Show button in addition to keyboard shortcut?</string>
+               </property>
+               <property name="text">
+                <string>Show nightmode button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="9" column="0">
+              <widget class="QCheckBox" name="showNebulaBgButtonCheckbox">
+               <property name="toolTip">
+                <string>Toggle display of nebula images.</string>
+               </property>
+               <property name="text">
+                <string>Show nebula background button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QCheckBox" name="showFlipButtonsCheckbox">
+               <property name="toolTip">
+                <string>Toggle vertical and horizontal image flip buttons.</string>
+               </property>
+               <property name="text">
+                <string>Show flip buttons</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QCheckBox" name="showDSSButtonCheckbox">
+               <property name="toolTip">
+                <string>Toggle display of the button for the Digitized Sky Survey.</string>
+               </property>
+               <property name="text">
+                <string>Show DSS button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QCheckBox" name="showHipsButtonCheckBox">
+               <property name="toolTip">
+                <string>Toggle display of the button for the HiPS Surveys. Select a survey in the View settings.</string>
+               </property>
+               <property name="text">
+                <string>Show HiPS button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="1">
+              <widget class="QCheckBox" name="showBookmarksButtonCheckBox">
+               <property name="toolTip">
+                <string>Enable a feature to store favorite views.</string>
+               </property>
+               <property name="text">
+                <string>Show bookmarks button</string>
+               </property>
+              </widget>
+             </item>
+             <item row="5" column="1">
+              <widget class="QCheckBox" name="showBookmarksLocButtonCheckBox">
+               <property name="toolTip">
+                <string>Enable a feature to store favorite locations.</string>
+               </property>
+               <property name="text">
+                <string>Show bookmarks locations button</string>
                </property>
               </widget>
              </item>
