@@ -116,7 +116,7 @@ StelGui::StelGui()
 	, buttonFullscreen(Q_NULLPTR)
 	, flagShowBookmarksButton(false)
 	, btShowBookmarks(Q_NULLPTR)
-    	, flagShowBookmarksLocButton(false)
+    , flagShowBookmarksLocButton(false)
 	, btShowBookmarksLoc(Q_NULLPTR)
 	, flagShowICRSGridButton(false)
 	, btShowICRSGrid(Q_NULLPTR)
@@ -219,7 +219,7 @@ void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
 #endif
 	astroCalcDialog = new AstroCalcDialog(atopLevelGraphicsWidget);
 	bookmarksDialog = new BookmarksDialog(atopLevelGraphicsWidget);
-    	bookmarksLocationsDialog = new BookmarksLocationsDialog(atopLevelGraphicsWidget);
+    bookmarksLocationsDialog = new BookmarksLocationsDialog(atopLevelGraphicsWidget);
 
 	///////////////////////////////////////////////////////////////////////
 	// Create all the main actions of the program, associated with shortcuts
