@@ -253,7 +253,7 @@ void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
 	actionsMgr->addAction("actionShow_Shortcuts_Window_Global", windowsGroup, N_("Shortcuts window"), shortcutsDialog, "visible", "F7", "", true);
 	actionsMgr->addAction("actionShow_AstroCalc_Window_Global", windowsGroup, N_("Astronomical calculations window"), astroCalcDialog, "visible", "F10", "", true);
 	actionsMgr->addAction("actionShow_Bookmarks_Window_Global", windowsGroup, N_("Bookmarks"), bookmarksDialog, "visible", "Alt+B", "", true);
-    	actionsMgr->addAction("actionShow_Bookmarks_Locations_Window_Global", windowsGroup, N_("BookmarksLocations"), bookmarksLocationsDialog, "visible", "Alt+F", "", true);
+    actionsMgr->addAction("actionShow_Bookmarks_Locations_Window_Global", windowsGroup, N_("BookmarksLocations"), bookmarksLocationsDialog, "visible", "Alt+F", "", true);
 	actionsMgr->addAction("actionSave_Copy_Object_Information_Global", miscGroup, N_("Copy selected object information to clipboard"), this, "copySelectedObjectInfo()", "Ctrl+Shift+C", "", true);
 
 	QSettings* conf = StelApp::getInstance().getSettings();
@@ -425,7 +425,7 @@ void StelGui::init(QGraphicsWidget *atopLevelGraphicsWidget)
 	setFlagShowNightmodeButton(conf->value("gui/flag_show_nightmode_button", true).toBool());
 	setFlagShowFullscreenButton(conf->value("gui/flag_show_fullscreen_button", true).toBool());
 	setFlagShowBookmarksButton(conf->value("gui/flag_show_bookmarks_button", false).toBool());
-    	setFlagShowBookmarksLocButton(conf->value("gui/flag_show_bookmarks_loc_button", false).toBool());
+    setFlagShowBookmarksLocButton(conf->value("gui/flag_show_bookmarks_loc_button", false).toBool());
 	setFlagShowICRSGridButton(conf->value("gui/flag_show_icrs_grid_button", false).toBool());
 	setFlagShowGalacticGridButton(conf->value("gui/flag_show_galactic_grid_button", false).toBool());
 	setFlagShowEclipticGridButton(conf->value("gui/flag_show_ecliptic_grid_button", false).toBool());

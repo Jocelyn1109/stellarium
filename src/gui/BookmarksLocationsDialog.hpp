@@ -49,7 +49,6 @@ class BookmarksLocationsDialog :  public StelDialog
     Q_OBJECT
     
 public:
-    
 	BookmarksLocationsDialog(QObject* parent);
 	virtual ~BookmarksLocationsDialog();
     
@@ -57,14 +56,13 @@ public:
 	void styleChanged();
     
 protected:
-    
     //! Initialize the dialog widgets and connect the signals/slots.
     virtual void createDialogContent();
     
     Ui_bookmarksLocationsDialogForm *ui;
-    
-    
+        
 private:
+    static constexpr const char* FILE_NAME = "bookmarks_locations.json";
     
     enum BookmarksLocationsColumns {
 		ColumnUUID,	//! 0 - UUID of bookmark
@@ -108,8 +106,6 @@ private slots:
     void clearBookmarksLocationsButtonPressed();
     
     void selectCurrentBookmarkLocation(const QModelIndex &modelIdx);
-
-
 };
 
 #endif // BOOKMARKSLOCATIONSDIALOG_H

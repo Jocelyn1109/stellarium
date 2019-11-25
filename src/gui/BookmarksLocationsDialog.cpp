@@ -17,10 +17,13 @@
  * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA  02110-1335, USA.
 */
 
+#include <QStringBuilder>
+
 #include "BookmarksLocationsDialog.hpp"
 #include "ui_bookmarksLocationsDialog.h"
 
 #include "StelCore.hpp"
+#include "StelUtils.hpp"
 #include "StelObjectMgr.hpp"
 #include "StelModuleMgr.hpp"
 #include "StelFileMgr.hpp"
@@ -35,8 +38,8 @@ BookmarksLocationsDialog::BookmarksLocationsDialog(QObject* parent): StelDialog(
     core = StelApp::getInstance().getCore();
     objectMgr = GETSTELMODULE(StelObjectMgr);
 	labelMgr = GETSTELMODULE(LabelMgr);
-    
-    bookmarksLocationsJsonPath = StelFileMgr::findFile("data", (StelFileMgr::Flags)(StelFileMgr::Directory|StelFileMgr::Writable)) + "/bookmarks_locations.json";
+    bookmarksLocationsListModel = new QStandardItemModel(0, ColumnCount);
+    bookmarksLocationsJsonPath = StelFileMgr::findFile("data", (StelFileMgr::Flags)(StelFileMgr::Directory|StelFileMgr::Writable)) + FILE_NAME;
 }
 
 
@@ -88,13 +91,14 @@ void BookmarksLocationsDialog::createDialogContent()
     QString style = "QCheckBox { color: rgb(238, 238, 238); }";
 	ui->dateTimeCheckBox->setStyleSheet(style);
     
+    //Enable the sort for columns
+    ui->bookmarksLocationsTreeView->setSortingEnabled(true);
 }
 
 
 // Define the header name for bookmarks locations table
 void BookmarksLocationsDialog::setBookmarksLocationsHeaderNames()
 {
-    
     QStringList headerStrings;
 	headerStrings << "UUID"; // Hide the column
 	headerStrings << q_("Location");
@@ -103,13 +107,11 @@ void BookmarksLocationsDialog::setBookmarksLocationsHeaderNames()
 	headerStrings << q_("Longitude");
     
     bookmarksLocationsListModel->setHorizontalHeaderLabels(headerStrings);
-    
 }
 
 //Add model raw in the model list (bookmarksLocationsListModel)
 void BookmarksLocationsDialog::addModelRow(int number, QString uuid, QString name, QString date, QString latitude, QString longitude)
 {
-    
     QStandardItem* item = Q_NULLPTR;
 
 	item = new QStandardItem(uuid);
@@ -136,7 +138,6 @@ void BookmarksLocationsDialog::addModelRow(int number, QString uuid, QString nam
 	{
 		ui->bookmarksLocationsTreeView->resizeColumnToContents(i);
 	}
-	
 }
 
 
@@ -154,7 +155,33 @@ void BookmarksLocationsDialog::retranslate()
 void BookmarksLocationsDialog::addBookmarkCurrentLocationButtonPressed()
 {
     const StelLocation currentLocation = core->getCurrentLocation();
-    QString locationToDisplay = "";
+    QString locationToDisplay = currentLocation.name % ", " % currentLocation.country;
+    if(currentLocation.state != "")
+    {
+        locationToDisplay = locationToDisplay % "(" % currentLocation.state % ")";
+    }
+    
+    QString longitude = QString::number(currentLocation.longitude);
+    QString latitude = QString::number(currentLocation.latitude);
+    
+    bool dateTimeFlag = ui->dateTimeCheckBox->isChecked();
+    QString JDs = "";
+    double JD = -1.;
+    if(dateTimeFlag)
+    {
+        JD = core->getJD();
+        JDs = StelUtils::julianDayToISO8601String(JD + core->getUTCOffset(JD)/24.).replace("T", " ");
+    }
+    
+    int lastRow = bookmarksLocationsListModel->rowCount();
+    QString uuid = QUuid::createUuid().toString();
+    
+    qDebug() << "Location name: " << currentLocation.name;
+    qDebug() << "Location country: " << currentLocation.country;
+    qDebug() << "Location state: " << currentLocation.state;
+    qDebug() << "Location longitude: " << currentLocation.longitude;
+    qDebug() << "Location latitude: " << currentLocation.latitude;
+    qDebug() << "locationToDisplay = " << locationToDisplay;
 }
 
 // Slot for add bookmark location from list
