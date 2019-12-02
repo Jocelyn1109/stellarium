@@ -32,11 +32,10 @@ class Ui_bookmarksLocationsDialogForm;
 //Data for a bookmark location
 struct bookmarkLocation
 {
-	QString name; //the name of the location. Ex: United States
+	QString name; //the name of the location. Ex: New York, United States
 	QString latitude; 
 	QString longitude;
 	QString jd; //date and time in Julian Day
-	double fov;
 };
 Q_DECLARE_METATYPE(bookmarkLocation)
 
@@ -91,6 +90,9 @@ private:
     
     //Add model raw in the model list (bookmarksLocationsListModel)
     void addModelRow(int number, QString uuid, QString name, QString date, QString latitude, QString longitude);
+    
+    //Save bookmarks in Json file
+    void saveBookmarks() const;
     
 public slots:
         void retranslate();
