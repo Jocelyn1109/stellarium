@@ -246,12 +246,12 @@ OcularsGuiPanel::OcularsGuiPanel(Oculars* plugin,
 					     "actionToggle_Oculars_Next_Telescope");
 	nextTelescopeButton->setToolTip(q_("Next telescope"));
 
-	connect(nextOcularButton,    SIGNAL(triggered()), ocularsPlugin, SLOT(incrementOcularIndex()));
-	connect(nextCcdButton,       SIGNAL(triggered()), ocularsPlugin, SLOT(incrementCCDIndex()));
-	connect(nextTelescopeButton, SIGNAL(triggered()), ocularsPlugin, SLOT(incrementTelescopeIndex()));
 	connect(prevOcularButton,    SIGNAL(triggered()), ocularsPlugin, SLOT(decrementOcularIndex()));
-	connect(prevCcdButton,       SIGNAL(triggered()), ocularsPlugin, SLOT(decrementCCDIndex()));
+	connect(nextOcularButton,    SIGNAL(triggered()), ocularsPlugin, SLOT(incrementOcularIndex()));
 	connect(prevTelescopeButton, SIGNAL(triggered()), ocularsPlugin, SLOT(decrementTelescopeIndex()));
+	connect(nextTelescopeButton, SIGNAL(triggered()), ocularsPlugin, SLOT(incrementTelescopeIndex()));
+	connect(prevCcdButton,       SIGNAL(triggered()), ocularsPlugin, SLOT(decrementCCDIndex()));
+	connect(nextCcdButton,       SIGNAL(triggered()), ocularsPlugin, SLOT(incrementCCDIndex()));
 	connect(nextLensButton,      SIGNAL(triggered()), ocularsPlugin, SLOT(incrementLensIndex()));
 	connect(prevLensButton,      SIGNAL(triggered()), ocularsPlugin, SLOT(decrementLensIndex()));
 

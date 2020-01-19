@@ -592,7 +592,7 @@ QString Planet::getInfoString(const StelCore* core, const InfoStringGroup& flags
 		static SolarSystem *ssystem=GETSTELMODULE(SolarSystem);
 		PlanetP earth = ssystem->getEarth();
 		PlanetP currentPlanet = core->getCurrentPlanet();
-		bool onEarth = (core->getCurrentPlanet()==earth);
+		const bool onEarth = (core->getCurrentPlanet()==earth);
 
 		// This is a string you can activate for debugging. It shows the distance between observer and center of the body you are standing on.
 		// May be helpful for debugging critical parallax corrections for eclipses.
@@ -665,7 +665,7 @@ QString Planet::getInfoString(const StelCore* core, const InfoStringGroup& flags
 				StelUtils::equToEcl(ra_equ, dec_equ, eclJDE, &lambdaMoon, &beta);
 				StelUtils::rectToSphe(&ra_equ,&dec_equ, ssystem->getSun()->getEquinoxEquatorialPos(core1));
 				StelUtils::equToEcl(ra_equ, dec_equ, eclJDE, &lambdaSun, &beta);
-				double deltaLong = lambdaMoon*M_180_PI - lambdaSun*M_180_PI;
+				double deltaLong = (lambdaMoon - lambdaSun)*M_180_PI;
 				core1->setUseTopocentricCoordinates(state);
 				core1->update(0); // enforce update cache for avoid odd selection of Moon details!
 				if (deltaLong<0.) deltaLong += 360.;
@@ -711,7 +711,6 @@ QString Planet::getInfoString(const StelCore* core, const InfoStringGroup& flags
 			}
 		}
 	}
-
 	postProcessInfoString(str, flags);
 
 	return str;
@@ -766,7 +765,6 @@ QVariantMap Planet::getInfoMap(const StelCore *core) const
 		}
 	}
 	map.insert("type", getPlanetTypeString()); // replace existing "type=Planet" by something more detailed.
-	// TBD: Is there ANY reason to keep "type"="Planet" and add a "ptype"=getPlanetTypeString() field?
 
 	return map;
 }
@@ -1017,7 +1015,7 @@ double Planet::getSiderealTime(double JD, double JDE) const
 
 	if (englishName=="Jupiter")
 	{
-		// N.B. This is not sideralTime but some SystemII longitude shifted by GRS position and texture position. For the time being, nobody should complain, though.
+		// N.B. This is not siderealTime but some SystemII longitude shifted by GRS position and texture position. For the time being, nobody should complain, though.
 		//
 		// CM2 considerations from http://www.projectpluto.com/grs_form.htm
 		// CM( System II) =  181.62 + 870.1869147 * jd + correction [870d rotation every day]
@@ -1034,18 +1032,16 @@ double Planet::getSiderealTime(double JD, double JDE) const
 		// --> None of these correction terms need to be applied!
 		// But the CM2 formula includes an average light time correction for Jupiter, which we have to take off here.
 		// This assumes a start value which includes average light time.
-		const double correction= 870.1869147 * 5.202561*AU / SPEED_OF_LIGHT / 86400.0;
+		static const double correction= 870.1869147 * 5.202561*AU / SPEED_OF_LIGHT / 86400.0;
 		double cm2=181.62 + 870.1869147 * JDE + correction; // Central Meridian II
 		cm2=std::fmod(cm2, 360.0);
 		// http://www.skyandtelescope.com/observing/transit-times-of-jupiters-great-red-spot/ writes:
 		// The predictions assume the Red Spot was at Jovian System II longitude 216° in September 2014 and continues to drift 1.25° per month, based on historical trends noted by JUPOS.
 		// GRS longitude was at 2014-09-08 216d with a drift of 1.25d every month
 		// Updated 2018-08, note as checkpoint that GRS longitude was given as 292d in S&T August 2018.
-		double longitudeGRS = 0.;
-		if (flagCustomGrsSettings)
-			longitudeGRS = customGrsLongitude + customGrsDrift*(JDE - customGrsJD)/365.25;
-		else
-			longitudeGRS=216+1.25*( JDE - 2456908)/30;
+		double longitudeGRS = (flagCustomGrsSettings ?
+			customGrsLongitude + customGrsDrift*(JDE - customGrsJD)/365.25 :
+			216+1.25*( JDE - 2456908)/30);
 		// qDebug() << "Jupiter: CM2 = " << cm2 << " longitudeGRS = " << longitudeGRS << " --> rotation = " << (cm2 - longitudeGRS);
 		return cm2 - longitudeGRS  +  (187./512.)*360.; // Last term is pixel position of GRS in texture.
 		// To verify:
@@ -1220,45 +1216,32 @@ float Planet::getMeanOppositionMagnitude() const
 {
 	if (absoluteMagnitude<=-99.f)
 		return 100.f;
-	if (englishName=="Sun")
-		return 100.f;
 
-	double semimajorAxis=0.;
-	if (englishName=="Moon")
-		return -12.74f;
-	else 	if (englishName=="Mars")
-		return -2.01f;
-	else if (englishName=="Jupiter")
-		return -2.7f;
-	else if (englishName=="Saturn")
-		return 0.67f;
-	else if (englishName=="Uranus")
-		return 5.52f;
-	else if (englishName=="Neptune")
-		return 7.84f;
-	else if (englishName=="Pluto")
-		return 15.12f;
-	else if (englishName=="Io")
-		return 5.02f;
-	else if (englishName=="Europa")
-		return 5.29f;
-	else if (englishName=="Ganymede")
-		return 4.61f;
-	else if (englishName=="Callisto")
-		return 5.65f;
-	else if (parent->englishName=="Mars")
-		semimajorAxis=1.52371034;
-	else if (parent->englishName=="Jupiter")
-		semimajorAxis=5.202887;
-	else if (parent->englishName=="Saturn")
-		semimajorAxis=9.53667594;
-	else if (parent->englishName=="Uranus")
-		semimajorAxis=19.18916464;
-	else if (parent->englishName=="Neptune")
-		semimajorAxis=30.06992276;
-	else if (parent->englishName=="Pluto")
-		semimajorAxis=39.48211675;
-	else if (pType>= isAsteroid)
+	static const QMap<QString, float>nameMap = {
+		{ "Sun",    100.f},
+		{ "Moon",   -12.74f},
+		{ "Mars",    -2.01f},
+		{ "Jupiter", -2.7f},
+		{ "Saturn",   0.67f},
+		{ "Uranus",   5.52f},
+		{ "Neptune",  7.84f},
+		{ "Pluto",   15.12f},
+		{ "Io",       5.02f},
+		{ "Europa",   5.29f},
+		{ "Ganymede", 4.61f},
+		{ "Callisto", 5.65f}};
+	if (nameMap.contains(englishName))
+		return nameMap.value(englishName);
+
+	static const QMap<QString, double>smaMap = {
+		{ "Mars",     1.52371034 },
+		{ "Jupiter",  5.202887   },
+		{ "Saturn",   9.53667594 },
+		{ "Uranus",  19.18916464 },
+		{ "Neptune", 30.06992276 },
+		{ "Pluto",   39.48211675 }};
+	double semimajorAxis=smaMap.value(parent->englishName, 0.);
+	if (pType>= isAsteroid)
 	{
 		if (orbitPtr)
 			semimajorAxis=(static_cast<CometOrbit*>(orbitPtr))->getSemimajorAxis();
@@ -1281,11 +1264,9 @@ float Planet::getVMagnitude(const StelCore* core) const
 
 		// check how much of it is visible
 		const SolarSystem* ssm = GETSTELMODULE(SolarSystem);
-		double shadowFactor = ssm->getEclipseFactor(core);
+		const double shadowFactor = qMax(0.000128, ssm->getEclipseFactor(core));
 		// See: Hughes, D. W., Brightness during a solar eclipse // Journal of the British Astronomical Association, vol.110, no.4, p.203-205
 		// URL: http://adsabs.harvard.edu/abs/2000JBAA..110..203H
-		if(shadowFactor < 0.000128)
-			shadowFactor = 0.000128;
 
 		return static_cast<float>(4.83 + 5.*(std::log10(distParsec)-1.) - 2.5*(std::log10(shadowFactor)));
 	}
@@ -1392,10 +1373,10 @@ float Planet::getVMagnitude(const StelCore* core) const
 					const double Omega=((0.000412*T+1.394681)*T+169.508470)*M_PI/180.0;
 					static SolarSystem *ssystem=GETSTELMODULE(SolarSystem);
 					const Vec3d saturnEarth=getHeliocentricEclipticPos() - ssystem->getEarth()->getHeliocentricEclipticPos();
-					double lambda=atan2(saturnEarth[1], saturnEarth[0]);
-					double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
+					const double lambda=atan2(saturnEarth[1], saturnEarth[0]);
+					const double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
 					const double sinx=sin(i)*cos(beta)*sin(lambda-Omega)-cos(i)*sin(beta);
-					double ringsIllum = -2.6*fabs(sinx) + 1.25*sinx*sinx; // ExplSup2013: added term as (10.81)
+					const double ringsIllum = -2.6*fabs(sinx) + 1.25*sinx*sinx; // ExplSup2013: added term as (10.81)
 					return static_cast<float>(-8.88 + d + 0.044*phaseDeg + ringsIllum);
 				}
 				if (englishName=="Uranus")
@@ -1451,10 +1432,10 @@ float Planet::getVMagnitude(const StelCore* core) const
 					const double Omega=((0.000412*T+1.394681)*T+169.508470)*M_PI/180.0;
 					static SolarSystem *ssystem=GETSTELMODULE(SolarSystem);
 					const Vec3d saturnEarth=getHeliocentricEclipticPos() - ssystem->getEarth()->getHeliocentricEclipticPos();
-					double lambda=atan2(saturnEarth[1], saturnEarth[0]);
-					double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
+					const double lambda=atan2(saturnEarth[1], saturnEarth[0]);
+					const double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
 					const double sinx=sin(i)*cos(beta)*sin(lambda-Omega)-cos(i)*sin(beta);
-					double ringsIllum = -2.6*fabs(sinx) + 1.25*sinx*sinx;
+					const double ringsIllum = -2.6*fabs(sinx) + 1.25*sinx*sinx;
 					return static_cast<float>(-8.88 + d + 0.044*phaseDeg + ringsIllum);
 				}
 				if (englishName=="Uranus")
@@ -1492,10 +1473,10 @@ float Planet::getVMagnitude(const StelCore* core) const
 					const double Omega=((0.000412*T+1.394681)*T+169.508470)*M_PI/180.0;
 					SolarSystem *ssystem=GETSTELMODULE(SolarSystem);
 					const Vec3d saturnEarth=getHeliocentricEclipticPos() - ssystem->getEarth()->getHeliocentricEclipticPos();
-					double lambda=atan2(saturnEarth[1], saturnEarth[0]);
-					double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
+					const double lambda=atan2(saturnEarth[1], saturnEarth[0]);
+					const double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
 					const double sinB=sin(i)*cos(beta)*sin(lambda-Omega)-cos(i)*sin(beta);
-					double ringsIllum = -2.6*fabs(sinB) + 1.25*sinB*sinB; // sinx=sinB, saturnicentric latitude of earth. longish, see Meeus.
+					const double ringsIllum = -2.6*fabs(sinB) + 1.25*sinB*sinB; // sinx=sinB, saturnicentric latitude of earth. longish, see Meeus.
 					return static_cast<float>(-8.68 + d + 0.044*phaseDeg + ringsIllum);
 				}
 				if (englishName=="Uranus")
@@ -1529,10 +1510,10 @@ float Planet::getVMagnitude(const StelCore* core) const
 					const double Omega=((0.000412*T+1.394681)*T+169.508470)*M_PI/180.0;
 					static SolarSystem *ssystem=GETSTELMODULE(SolarSystem);
 					const Vec3d saturnEarth=getHeliocentricEclipticPos() - ssystem->getEarth()->getHeliocentricEclipticPos();
-					double lambda=atan2(saturnEarth[1], saturnEarth[0]);
-					double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
+					const double lambda=atan2(saturnEarth[1], saturnEarth[0]);
+					const double beta=atan2(saturnEarth[2], std::sqrt(saturnEarth[0]*saturnEarth[0]+saturnEarth[1]*saturnEarth[1]));
 					const double sinB=sin(i)*cos(beta)*sin(lambda-Omega)-cos(i)*sin(beta);
-					double ringsIllum = -2.6*fabs(sinB) + 1.25*sinB*sinB; // sinx=sinB, saturnicentric latitude of earth. longish, see Meeus.
+					const double ringsIllum = -2.6*fabs(sinB) + 1.25*sinB*sinB; // sinx=sinB, saturnicentric latitude of earth. longish, see Meeus.
 					return static_cast<float>(-8.88 + d + 0.044*phaseDeg + ringsIllum);
 				}
 				if (englishName=="Uranus")
@@ -1560,9 +1541,7 @@ float Planet::getVMagnitude(const StelCore* core) const
 
 double Planet::getAngularSize(const StelCore* core) const
 {
-	double rad = equatorialRadius;
-	if (rings)
-		rad = rings->getSize();
+	const double rad = (rings ? rings->getSize() : equatorialRadius);
 	return std::atan2(rad*sphereScale,getJ2000EquatorialPos(core).length()) * M_180_PI;
 }
 
@@ -3126,7 +3105,7 @@ void Planet::drawHints(const StelCore* core, const QFont& planetNameFont)
 	sPainter.setFont(planetNameFont);
 	// Draw nameI18 + scaling if it's not == 1.
 	float tmp = (hintFader.getInterstate()<=0.f ? 7.f : 10.f) + static_cast<float>(getAngularSize(core)*M_PI/180.)*prj->getPixelPerRadAtCenter()/1.44f; // Shift for nameI18 printing
-	sPainter.setColor(labelColor[0], labelColor[1], labelColor[2],labelsFader.getInterstate());
+	sPainter.setColor(labelColor,labelsFader.getInterstate());
 	sPainter.drawText(static_cast<float>(screenPos[0]),static_cast<float>(screenPos[1]), getSkyLabel(core), 0, tmp, tmp, false);
 
 	// hint disappears smoothly on close view
@@ -3134,7 +3113,7 @@ void Planet::drawHints(const StelCore* core, const QFont& planetNameFont)
 		return;
 	tmp -= 10.f;
 	if (tmp<1) tmp=1;
-	sPainter.setColor(labelColor[0], labelColor[1], labelColor[2],labelsFader.getInterstate()*hintFader.getInterstate()/tmp*0.7f);
+	sPainter.setColor(labelColor,labelsFader.getInterstate()*hintFader.getInterstate()/tmp*0.7f);
 
 	// Draw the 2D small circle
 	sPainter.setBlending(true);
@@ -3155,67 +3134,34 @@ Vec3f Planet::getCurrentOrbitColor() const
 	{
 		case ocsGroups:
 		{
-			switch (pType)
-			{
-				case isMoon:
-					orbColor = orbitMoonsColor;
-					break;
-				case isPlanet:
-					orbColor = orbitMajorPlanetsColor;
-					break;
-				case isAsteroid:
-					orbColor = orbitMinorPlanetsColor;
-					break;
-				case isDwarfPlanet:
-					orbColor = orbitDwarfPlanetsColor;
-					break;
-				case isCubewano:
-					orbColor = orbitCubewanosColor;
-					break;
-				case isPlutino:
-					orbColor = orbitPlutinosColor;
-					break;
-				case isSDO:
-					orbColor = orbitScatteredDiscObjectsColor;
-					break;
-				case isOCO:
-					orbColor = orbitOortCloudObjectsColor;
-					break;
-				case isComet:
-					orbColor = orbitCometsColor;
-					break;
-				case isSednoid:
-					orbColor = orbitSednoidsColor;
-					break;
-				case isInterstellar:
-					orbColor = orbitInterstellarColor;
-					break;
-				default:
-					orbColor = orbitColor;
-			}
+			const QMap<Planet::PlanetType, Vec3f> typeColorMap = {
+				{ isMoon,         orbitMoonsColor       },
+				{ isPlanet,       orbitMajorPlanetsColor},
+				{ isAsteroid,     orbitMinorPlanetsColor},
+				{ isDwarfPlanet,  orbitDwarfPlanetsColor},
+				{ isCubewano,     orbitCubewanosColor   },
+				{ isPlutino,      orbitPlutinosColor    },
+				{ isSDO,          orbitScatteredDiscObjectsColor},
+				{ isOCO,          orbitOortCloudObjectsColor},
+				{ isComet,        orbitCometsColor      },
+				{ isSednoid,      orbitSednoidsColor    },
+				{ isInterstellar, orbitInterstellarColor}};
+			orbColor = typeColorMap.value(pType, orbitColor);
 			break;
 		}
 		case ocsMajorPlanets:
 		{
-			QString pName = getEnglishName().toLower();
-			if (pName=="mercury")
-				orbColor = orbitMercuryColor;
-			else if (pName=="venus")
-				orbColor = orbitVenusColor;
-			else if (pName=="earth")
-				orbColor = orbitEarthColor;
-			else if (pName=="mars")
-				orbColor = orbitMarsColor;
-			else if (pName=="jupiter")
-				orbColor = orbitJupiterColor;
-			else if (pName=="saturn")
-				orbColor = orbitSaturnColor;
-			else if (pName=="uranus")
-				orbColor = orbitUranusColor;
-			else if (pName=="neptune")
-				orbColor = orbitNeptuneColor;
-			else
-				orbColor = orbitColor;
+			const QString pName = getEnglishName().toLower();
+			const QMap<QString, Vec3f>majorPlanetColorMap = {
+				{ "mercury", orbitMercuryColor},
+				{ "venus",   orbitVenusColor  },
+				{ "earth",   orbitEarthColor  },
+				{ "mars",    orbitMarsColor   },
+				{ "jupiter", orbitJupiterColor},
+				{ "saturn",  orbitSaturnColor },
+				{ "uranus",  orbitUranusColor },
+				{ "neptune", orbitNeptuneColor}};
+			orbColor=majorPlanetColorMap.value(pName, orbitColor);
 			break;
 		}
 		case ocsOneColor:
@@ -3266,9 +3212,7 @@ void Planet::drawOrbit(const StelCore* core)
 	// Normal transparency mode
 	sPainter.setBlending(true);
 
-	Vec3f orbColor = getCurrentOrbitColor();
-
-	sPainter.setColor(orbColor[0], orbColor[1], orbColor[2], orbitFader.getInterstate());
+	sPainter.setColor(getCurrentOrbitColor(), orbitFader.getInterstate());
 	Vec3d onscreen;
 	// special case - use current Planet position as center vertex so that draws
 	// on its orbit all the time (since segmented rather than smooth curve)

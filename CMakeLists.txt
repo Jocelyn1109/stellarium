@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
 MESSAGE(STATUS "Found CMake ${CMAKE_VERSION}")
 
 IF(POLICY CMP0054)
@@ -19,7 +19,7 @@ PROJECT(Stellarium)
 # Use integer versions instead of strings for easier handling if required
 SET(STELLARIUM_MAJOR 0)
 SET(STELLARIUM_MINOR 19)
-SET(STELLARIUM_PATCH 2)
+SET(STELLARIUM_PATCH 3)
 ADD_DEFINITIONS(
      -DSTELLARIUM_MAJOR=${STELLARIUM_MAJOR}
      -DSTELLARIUM_MINOR=${STELLARIUM_MINOR}
@@ -407,6 +407,7 @@ ADD_PLUGIN(SolarSystemEditor 1)
 ADD_PLUGIN(Supernovae 1)
 ADD_PLUGIN(TextUserInterface 1)
 ADD_PLUGIN(TelescopeControl 1)
+ADD_PLUGIN(Vts 0)
 
 ########## Static plugins need to define includes and libraries
 ########## for the compilation of Stellarium itself

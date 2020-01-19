@@ -20,6 +20,7 @@
 #include <QtMath>
 
 #include "LandscapeMgr.hpp"
+#include "StelLocaleMgr.hpp"
 #include "MeteorShower.hpp"
 #include "MeteorShowers.hpp"
 #include "SporadicMeteorMgr.hpp"
@@ -349,8 +350,7 @@ void MeteorShower::drawRadiant(StelCore *core)
 			break;
 		default: //Inactive
 			rgb = m_mgr->getColorIR();
-	}
-	rgb /= 255.f;
+	}	
 	painter.setColor(rgb[0], rgb[1], rgb[2], alpha);
 
 	// Hide the radiant markers at during day light and make it visible
@@ -597,17 +597,19 @@ QString MeteorShower::getInfoString(const StelCore* core, const InfoStringGroup&
 				       .arg(actStr)
 				       .arg(m_activity.start.day())
 				       .arg(m_activity.finish.day())
-				       .arg(m_activity.start.toString("MMMM"));
+				       .arg(StelLocaleMgr::longGenitiveMonthName(m_activity.start.month()));
 			}
 			else
 			{
-				oss << QString("%1: %2 - %3")
+				oss << QString("%1: %2 %3 - %4 %5")
 				       .arg(actStr)
-				       .arg(m_activity.start.toString("d MMMM"))
-				       .arg(m_activity.finish.toString("d MMMM"));
+				       .arg(m_activity.start.day())
+				       .arg(StelLocaleMgr::longGenitiveMonthName(m_activity.start.month()))
+				       .arg(m_activity.finish.day())
+				       .arg(StelLocaleMgr::longGenitiveMonthName(m_activity.finish.month()));
 			}
 			oss << "<br />";
-			oss << q_("Maximum: %1").arg(m_activity.peak.toString("d MMMM"));
+			oss << QString("%1: %2 %3").arg(qc_("Maximum","meteor shower activity")).arg(m_activity.peak.day()).arg(StelLocaleMgr::longGenitiveMonthName(m_activity.peak.month()));
 
 			oss << QString(" (%1 %2&deg;)")
 			       .arg(q_("Solar longitude"))
@@ -643,20 +645,11 @@ QVariantMap MeteorShower::getInfoMap(const StelCore *core) const
 
 	if (enabled())
 	{
-		QString mstdata;
-		if (m_status == ACTIVE_GENERIC)
-		{
-			mstdata = "generic-data";
-		}
-		else if (m_status == ACTIVE_CONFIRMED)
-		{
-			mstdata = "confirmed-data";
-		}
-		else if (m_status == INACTIVE)
-		{
-			mstdata = "inactive";
-		}
-		map.insert("status", mstdata);
+		const QMap<MeteorShower::Status, QString>mstMap={
+			{ ACTIVE_GENERIC, "generic-data"},
+			{ ACTIVE_CONFIRMED, "confirmed-data"},
+			{ INACTIVE, "inactive"}};
+		map.insert("status", mstMap.value(m_status, ""));
 
 		if (!m_showerID.toInt())
 		{

@@ -396,8 +396,8 @@ namespace StelUtils
 	//! Return a day number of week for date
 	//! @return number of day: 0 - sunday, 1 - monday,..
 	int getDayOfWeek(int year, int month, int day);
-	inline int getDayOfWeek(double JD){
-		return static_cast<int>(floor(fmod(JD+1.5, 7)));
+	inline int getDayOfWeek(double JD){ double d= fmod(JD+1.5, 7); if (d<0) d+=7.0;
+		return static_cast<int>(floor(d));
 	}
 
 	//! Get the current Julian Date from system time.
@@ -473,25 +473,12 @@ namespace StelUtils
 				1.f / (1.f -x*(1.f -x/2.f*(1.f- x/3.f*(1.f-x/4.f*(1.f-x/5.f)))));
 	}
 
-	//! Get a night mode version of a color.  That is find the brightness of a color and set that in the
-	//! red channel only
-	/* FIXME: abandoned code?
-	inline Vec3f getNightColor(const Vec3f& dayColor)
-	{
-		float max = 0.0;
-		for(int i=0; i<3; i++)
-		{
-			max = dayColor[i] > max ? dayColor[i] : max;
-		}
-		return Vec3f(max, 0, 0);
-	}
-	*/
-
 	//! Calculate and return sidereal period in days from semi-major axis (in AU)
 	double calculateSiderealPeriod(const double SemiMajorAxis);
 
 	//! Convert decimal hours to hours, minutes, seconds
 	QString hoursToHmsStr(const double hours, const bool lowprecision = false);
+	QString hoursToHmsStr(const float hours, const bool lowprecision = false);
 
 	//! Convert a hms formatted string to decimal hours
 	double hmsStrToHours(const QString& s);
@@ -897,6 +884,12 @@ namespace StelUtils
 		T K=J-H;
 
 		return (((K*(1.0/24.0)*n + (H+J)/12.0)*n  + (F*0.5-K/24.0))*n + ((B+C)*0.5 - (H+J)/12.0))*n +y3;
+	}
+
+	//! Interval test. This checks whether @param value is within [@param low, @param high]
+	template <typename T> bool isWithin(const T& value, const T& low, const T& high)
+	{
+	    return !(value < low) && !(high < value);
 	}
 
 
