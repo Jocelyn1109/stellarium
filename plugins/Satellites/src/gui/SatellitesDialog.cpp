@@ -64,8 +64,7 @@ SatellitesDialog::SatellitesDialog()
 	, importWindow(Q_NULLPTR)
 	, filterModel(Q_NULLPTR)
 	, checkStateRole(Qt::UserRole)
-	, delimiter(", ")
-	, acEndl("\n")
+	, delimiter(", ")	
 {
 	ui = new Ui_satellitesDialog;
 	iridiumFlaresHeader.clear();
@@ -120,12 +119,6 @@ void SatellitesDialog::createDialogContent()
 		enableKineticScrolling(gui->getFlagUseKineticScrolling());
 		connect(gui, SIGNAL(flagUseKineticScrollingChanged(bool)), this, SLOT(enableKineticScrolling(bool)));
 	}
-
-#ifdef Q_OS_WIN
-	acEndl="\r\n";
-#else
-	acEndl="\n";
-#endif
 
 	// Set symbols on buttons
 	ui->addSatellitesButton->setText(QChar(0x2795)); // Heavy plus symbol
@@ -397,7 +390,7 @@ void SatellitesDialog::savePredictedIridiumFlares()
 		QTextStream predictedIridiumFlaresList(&predictedIridiumFlares);
 		predictedIridiumFlaresList.setCodec("UTF-8");
 
-		predictedIridiumFlaresList << iridiumFlaresHeader.join(delimiter) << acEndl;
+		predictedIridiumFlaresList << iridiumFlaresHeader.join(delimiter) << StelUtils::getEndLineChar();
 
 		for (int i = 0; i < count; i++)
 		{
@@ -408,7 +401,7 @@ void SatellitesDialog::savePredictedIridiumFlares()
 				if (j<columns-1)
 					predictedIridiumFlaresList << delimiter;
 				else
-					predictedIridiumFlaresList << acEndl;
+					predictedIridiumFlaresList << StelUtils::getEndLineChar();
 			}
 		}
 		predictedIridiumFlares.close();
@@ -740,6 +733,7 @@ void SatellitesDialog::populateAboutPage()
 			.arg(jsonFileName)
 			.arg(oldJsonFileName);
 	html += "<li>" + resetSettingsText + "</li>";
+	html += "<li>" + q_("The value of perigee and apogee altitudes compute for mean Earth radius.") + "</li>";
 	html += "<li>" + q_("The Satellites plugin is still under development.  Some features are incomplete, missing or buggy.") + "</li>";
 	html += "</ul></p>";
 
@@ -1019,8 +1013,7 @@ void SatellitesDialog::populateSourcesList()
 
 	Satellites* plugin = GETSTELMODULE(Satellites);
 	QStringList urls = plugin->getTleSources();
-	checkStateRole = plugin->isAutoAddEnabled() ? Qt::CheckStateRole
-						    : Qt::UserRole;
+	checkStateRole = plugin->isAutoAddEnabled() ? Qt::CheckStateRole : Qt::UserRole;
 	for (auto url : urls)
 	{
 		bool checked = false;
@@ -1035,8 +1028,7 @@ void SatellitesDialog::populateSourcesList()
 		item->setData(checkStateRole, checked ? Qt::Checked : Qt::Unchecked);
 	}
 	ui->sourceList->blockSignals(false);
-
-	if (ui->sourceList->count() > 0) ui->sourceList->setCurrentRow(0);
+	// if (ui->sourceList->count() > 0) ui->sourceList->setCurrentRow(0);
 }
 
 void SatellitesDialog::addSpecialGroupItem()

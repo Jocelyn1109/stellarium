@@ -367,8 +367,7 @@ double Oculars::getCallOrder(StelModuleActionName actionName) const
 {
 	double order = 1000.0; // Very low priority, unless we interact.
 
-	if (actionName==StelModule::ActionHandleKeys ||
-	    actionName==StelModule::ActionHandleMouseMoves ||
+	if (actionName==StelModule::ActionHandleMouseMoves ||
 	    actionName==StelModule::ActionHandleMouseClicks)
 	{
 		// Make sure we are called before MovementMgr (we need to even call it once!)
@@ -452,134 +451,8 @@ void Oculars::handleMouseClicks(class QMouseEvent* event)
 	event->setAccepted(false);
 }
 
-void Oculars::handleKeys(QKeyEvent* event)
-{
-	if (!flagShowOculars && !flagShowCCD)
-	{
-		return;
-	}
-	// We onle care about the arrow keys.  This flag tracks that.
-	bool consumeEvent = false;
-	
-	StelCore *core = StelApp::getInstance().getCore();
-	StelMovementMgr *movementManager = core->getMovementMgr();
-	
-	if (event->type() == QEvent::KeyPress)
-	{
-		// Direction and zoom replacements
-		switch (event->key())
-		{
-			case Qt::Key_Left:
-				movementManager->turnLeft(true);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Right:
-				movementManager->turnRight(true);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Up:
-				if (!event->modifiers().testFlag(Qt::ControlModifier))
-				{
-					movementManager->turnUp(true);
-				}
-				consumeEvent = true;
-				break;
-			case Qt::Key_Down:
-				if (!event->modifiers().testFlag(Qt::ControlModifier))
-				{
-					movementManager->turnDown(true);
-				}
-				consumeEvent = true;
-				break;
-			case Qt::Key_PageUp:
-				movementManager->zoomIn(true);
-				consumeEvent = true;
-				break;
-			case Qt::Key_PageDown:
-				movementManager->zoomOut(true);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Shift:
-				movementManager->moveSlow(true);
-				consumeEvent = true;
-				break;
-			case Qt::Key_M:
-				double multiplier = 1.0;
-				if (event->modifiers().testFlag(Qt::ControlModifier))
-				{
-					multiplier = 0.1;
-				}
-				if (event->modifiers().testFlag(Qt::AltModifier))
-				{
-					multiplier = 5.0;
-				}
-				if (event->modifiers().testFlag(Qt::ShiftModifier))
-				{
-					reticleRotation += (1.0 * multiplier);
-				}
-				else
-				{
-					reticleRotation -= (1.0 * multiplier);
-				}
-				//qDebug() << reticleRotation;
-				consumeEvent = true;
-				break;
-		}
-	}
-	else
-	{
-		// When a deplacement key is released stop moving
-		switch (event->key())
-		{
-			case Qt::Key_Left:
-				movementManager->turnLeft(false);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Right:
-				movementManager->turnRight(false);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Up:
-				movementManager->turnUp(false);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Down:
-				movementManager->turnDown(false);
-				consumeEvent = true;
-				break;
-			case Qt::Key_PageUp:
-				movementManager->zoomIn(false);
-				consumeEvent = true;
-				break;
-			case Qt::Key_PageDown:
-				movementManager->zoomOut(false);
-				consumeEvent = true;
-				break;
-			case Qt::Key_Shift:
-				movementManager->moveSlow(false);
-				consumeEvent = true;
-				break;
-		}
-		if (consumeEvent)
-		{
-			// We don't want to re-center the object; just hold the current position.
-			movementManager->setFlagLockEquPos(true);
-		}
-	}
-	if (consumeEvent)
-	{
-		event->accept();
-	}
-	else
-	{
-		event->setAccepted(false);
-	}
-}
-
 void Oculars::init()
 {
-	qDebug() << "Ocular plugin - press Command-O to toggle eyepiece view mode. Press ALT-o for configuration.";
-
 	// Load settings from ocular.ini
 	try {
 		validateAndLoadIniFile();
@@ -736,7 +609,9 @@ void Oculars::init()
 	}
 
 	cardinalsNormalTexture = StelApp::getInstance().getTextureManager().createTexture(":/ocular/cardinals.png");
-	cardinalsMirroredTexture = StelApp::getInstance().getTextureManager().createTexture(":/ocular/cardinals-mirrored.png");
+	cardinalsMirroredTexture = StelApp::getInstance().getTextureManager().createTexture(":/ocular/cardinals-mirrored.png");	
+	// enforce check existence of reticle for the current eyepiece
+	updateOcularReticle();
 
 	connect(&StelApp::getInstance(), SIGNAL(languageChanged()), this, SLOT(retranslateGui()));
 	connect(this, SIGNAL(selectedOcularChanged(int)), this, SLOT(updateOcularReticle()));
@@ -1105,6 +980,18 @@ void Oculars::decrementLensIndex()
 		selectedLensIndex = lenses.count() - 1;
 	}
 	emit(selectedLensChanged(selectedLensIndex));
+}
+
+void Oculars::rotateReticleClockwise()
+{
+	// Step: 5 degrees
+	reticleRotation -= 5.0;
+}
+
+void Oculars::rotateReticleCounterclockwise()
+{
+	// Step: 5 degrees
+	reticleRotation += 5.0;
 }
 
 void Oculars::displayPopupMenu()
@@ -1523,12 +1410,12 @@ void Oculars::initializeActivationActions()
 	Q_ASSERT(gui);
 
 	QString ocularsGroup = N_("Oculars");
-	actionShowOcular     = addAction("actionShow_Ocular",                ocularsGroup, N_("Ocular view"), "enableOcular", "Ctrl+O");
-	actionMenu           = addAction("actionShow_Ocular_Menu",           ocularsGroup, N_("Oculars popup menu"), "displayPopupMenu()", "Alt+O");
-	actionShowCrosshairs = addAction("actionShow_Ocular_Crosshairs",     ocularsGroup, N_("Show crosshairs"),    "enableCrosshairs", "Alt+C");
-	actionShowSensor     = addAction("actionShow_Sensor",                ocularsGroup, N_("Image sensor frame"), "enableCCD");
-	actionShowTelrad     = addAction("actionShow_Telrad",                ocularsGroup, N_("Telrad sight"),       "enableTelrad", "Ctrl+B");
-	actionConfiguration  = addAction("actionOpen_Oculars_Configuration", ocularsGroup, N_("Oculars plugin configuration"), ocularDialog, "visible");
+	actionShowOcular = addAction("actionShow_Ocular", ocularsGroup, N_("Ocular view"), "enableOcular", "Ctrl+O");
+	actionMenu = addAction("actionShow_Ocular_Menu", ocularsGroup, N_("Oculars popup menu"), "displayPopupMenu()", "Alt+O");
+	actionShowCrosshairs = addAction("actionShow_Ocular_Crosshairs", ocularsGroup, N_("Show crosshairs"), "enableCrosshairs", "Alt+C");
+	actionShowSensor = addAction("actionShow_Sensor", ocularsGroup, N_("Image sensor frame"), "enableCCD");
+	actionShowTelrad = addAction("actionShow_Telrad", ocularsGroup, N_("Telrad sight"), "enableTelrad", "Ctrl+B");
+	actionConfiguration = addAction("actionOpen_Oculars_Configuration", ocularsGroup, N_("Oculars configuration window"), ocularDialog, "visible", ""); // Allow assign shortkey
 	// Select next telescope via keyboard
 	addAction("actionShow_Telescope_Increment", ocularsGroup, N_("Select next telescope"), "incrementTelescopeIndex()", "");
 	// Select previous telescope via keyboard
@@ -1537,14 +1424,13 @@ void Oculars::initializeActivationActions()
 	addAction("actionShow_Ocular_Increment", ocularsGroup, N_("Select next eyepiece"), "incrementOcularIndex()", "");
 	// Select previous eyepiece via keyboard
 	addAction("actionShow_Ocular_Decrement", ocularsGroup, N_("Select previous eyepiece"), "decrementOcularIndex()", "");
+	addAction("actionShow_Ocular_Rotate_Reticle_Clockwise", ocularsGroup, N_("Rotate reticle pattern of the eyepiece clockwise"), "rotateReticleClockwise()", "Alt+M");
+	addAction("actionShow_Ocular_Rotate_Reticle_Counterclockwise", ocularsGroup, N_("Rotate reticle pattern of the eyepiece counterclockwise"), "rotateReticleCounterclockwise()", "Shift+Alt+M");
 
 	connect(this, SIGNAL(selectedCCDChanged(int)),       this, SLOT(instrumentChanged()));	
 	connect(this, SIGNAL(selectedOcularChanged(int)),    this, SLOT(instrumentChanged()));
 	connect(this, SIGNAL(selectedTelescopeChanged(int)), this, SLOT(instrumentChanged()));	
 	connect(this, SIGNAL(selectedLensChanged(int)),      this, SLOT(instrumentChanged()));
-	// GZ these connections are now made in the Dialog setup, and they connect to properties!
-	//connect(ocularDialog, SIGNAL(requireSelectionChanged(bool)), this, SLOT(setRequireSelection(bool)));
-	//connect(ocularDialog, SIGNAL(scaleImageCircleChanged(bool)), this, SLOT(setScaleImageCircle(bool)));
 
 	connect(ccdRotationSignalMapper, SIGNAL(mapped(int)), this, SLOT(rotateCCD(int)));
 	connect(ccdsSignalMapper,        SIGNAL(mapped(int)), this, SLOT(selectCCDAtIndex(int)));
@@ -1952,9 +1838,8 @@ void Oculars::paintOcularMask(const StelCore *core)
 			cardinalsMirroredTexture->bind();
 		else
 			cardinalsNormalTexture->bind();
-		painter.drawSprite2dMode(centerScreen[0], centerScreen[1], static_cast<float>(inner / params.devicePixelsPerPixel), static_cast<float>(-polarAngle));
+		painter.drawSprite2dMode(centerScreen[0], centerScreen[1], static_cast<float>(inner / params.devicePixelsPerPixel), static_cast<float>(-polarAngle));		
 	}
-
 }
 
 void Oculars::paintText(const StelCore* core)
